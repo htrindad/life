@@ -9,7 +9,6 @@ typedef struct	grade_s
 	int	h;
 	int	iter;
 	int	**map;
-	bool	pen;
 }		grade_t;
 
 typedef struct	pen_s
@@ -43,7 +42,7 @@ pen_t	initializePen()
 	return pen;
 }
 
-void	executeCmd(char const cmd, grade_t const grade, pen_t *pen)
+void	executeCmd(char const cmd, grade_t *grade, pen_t *pen)
 {
 	switch (cmd)
 	{
@@ -55,16 +54,22 @@ void	executeCmd(char const cmd, grade_t const grade, pen_t *pen)
 				pen->y--;
 			break;
 		case 's':
-			if (pen->y < grade.h)
+			if (pen->y < grade->h - 1)
 				pen->y++;
 			break ;
 		case 'a':
 			if (pen->x)
 				pen->x--;
+			break ;
 		case 'd':
-			if (pen->x < grade.w)
+			if (pen->x < grade->w - 1)
 				pen->x++;
+			break ;
+		default:
+			break ;
 	}
+	if (pen->down)
+		grade->map[pen->y][pen->x] = 1;
 }
 
 grade_t	duplicateGrade(grade_t const old)
@@ -75,25 +80,26 @@ grade_t	duplicateGrade(grade_t const old)
 	new.w		= old.w;
 	new.iter	= old.iter;
 	createMap(&new);
-	for (int i = 0; i <= new.h; i++)
-		for (int j = 0; j <= new.w; j++)
+	for (int i = 0; i < new.h; i++)
+		for (int j = 0; j < new.w; j++)
 			new.map[i][j] = old.map[i][j];
 	return new;
 }
 
 void	checkBoard(grade_t *grade, int const start_y, int const start_x)
 {
-	int y = start_y - 2, x = start_x - 2, alive = 0;
+	int y = start_y - 1, x = start_x - 1, alive = 0;
 
 	while (y < 0)
 		y++;
 	while (x < 0)
 		x++;
-	for (; y < start_y + 3; y++)
-		for (; x < start_x + 3; x++)
+	int reset_x = x;
+	for (; y < start_y + 2 && y < grade->h; y++)
+		for (x = reset_x; x < start_x + 2 && x < grade->w; x++)
 			if (grade->map[y][x])
 				alive++;
-	if (alive < 2)
+	if (alive < 2 || alive > 3)
 		grade->map[start_y][start_x] = 0;
 	if (alive == 3)
 		grade->map[start_y][start_x] = 1;
@@ -101,18 +107,18 @@ void	checkBoard(grade_t *grade, int const start_y, int const start_x)
 
 void	destroyGrade(grade_t grade)
 {
-	for (int y = 0; y <= grade.h; y++)
+	for (int y = 0; y < grade.h; y++)
 		free(grade.map[y]);
 	free(grade.map);
 }
 
-void	iterations(grade_t *grade, pen_t const pen)
+void	iterations(grade_t *grade)
 {
 	while (grade->iter--)
 	{
 		grade_t next = duplicateGrade(*grade);
-		for (int y = 0; next.h - 1; y++)
-			for (int x = 0; next.w - 1; x++)
+		for (int y = 0; y < next.h - 1; y++)
+			for (int x = 0; x < next.w - 1; x++)
 				checkBoard(&next, y, x);
 		grade_t	tmp = *grade;
 		grade = &next;
@@ -122,12 +128,12 @@ void	iterations(grade_t *grade, pen_t const pen)
 
 void	print_all(grade_t const grade)
 {
-	for (int y = 0; y <= grade.h; y++)
+	for (int y = 0; y < grade.h; y++)
 	{
-		for (int x = 0; y <= grade.w; x++)
+		for (int x = 0; x < grade.w; x++)
 		{
-			if (grade.map[grade.h][grade.w])
-				putchar('0');
+			if (grade.map[y][x])
+				putchar('O');
 			else
 				putchar(' ');
 		}
@@ -148,8 +154,8 @@ int	main(int ac, char **av)
 	createMap(&grade);
 	pen_t	pen = initializePen();
 	while (read(0, &cmd, 1) > 0)
-		executeCmd(cmd, grade, &pen);
-	iterations(&grade, pen);
+		executeCmd(cmd, &grade, &pen);
+	iterations(&grade);
 	print_all(grade);
 	destroyGrade(grade);
 	return 0;
