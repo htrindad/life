@@ -97,12 +97,30 @@ void	checkBoard(grade_t *grade, int const start_y, int const start_x)
 	int reset_x = x;
 	for (; y < start_y + 2 && y < grade->h; y++)
 		for (x = reset_x; x < start_x + 2 && x < grade->w; x++)
-			if (grade->map[y][x])
+			if ((grade->map[y][x] > 0 && grade->map[y][x] < 3) && (y != start_y || x != start_x))
 				alive++;
-	if (alive < 2 || alive > 3)
-		grade->map[start_y][start_x] = 0;
-	if (alive == 3)
-		grade->map[start_y][start_x] = 1;
+	if (grade->map[start_y][start_x] == 1 && (alive < 2 || alive > 3))
+		grade->map[start_y][start_x] = 2;
+	if (alive == 3 && !grade->map[start_y][start_x])
+		grade->map[start_y][start_x] = 3;
+}
+
+void	scourge(grade_t *grade)
+{
+	for (int y = 0; y < grade->h; y++)
+	{
+		for (int x = 0; x < grade->w; x++)
+		{
+			switch (grade->map[y][x])
+			{
+				case 2:
+					grade->map[y][x] = 0;
+					break ;
+				case 3:
+					grade->map[y][x] = 1;
+			}
+		}
+	}
 }
 
 void	destroyGrade(grade_t grade)
@@ -117,11 +135,12 @@ void	iterations(grade_t *grade)
 	while (grade->iter--)
 	{
 		grade_t next = duplicateGrade(*grade);
-		for (int y = 0; y < next.h - 1; y++)
-			for (int x = 0; x < next.w - 1; x++)
+		for (int y = 0; y < next.h; y++)
+			for (int x = 0; x < next.w; x++)
 				checkBoard(&next, y, x);
+		scourge(&next);
 		grade_t	tmp = *grade;
-		grade = &next;
+		*grade = next;
 		destroyGrade(tmp);
 	}
 }
