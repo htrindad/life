@@ -99,7 +99,7 @@ void	checkBoard(grade_t *grade, int const start_y, int const start_x)
 		for (x = reset_x; x < start_x + 2 && x < grade->w; x++)
 			if ((grade->map[y][x] > 0 && grade->map[y][x] < 3) && (y != start_y || x != start_x))
 				alive++;
-	if (grade->map[start_y][start_x] == 1 && (alive < 2 || alive > 3))
+	if ((alive < 2 || alive > 3) && grade->map[start_y][start_x] == 1)
 		grade->map[start_y][start_x] = 2;
 	if (alive == 3 && !grade->map[start_y][start_x])
 		grade->map[start_y][start_x] = 3;
